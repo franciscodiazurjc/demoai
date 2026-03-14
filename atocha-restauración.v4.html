@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ineco | Patrimonio Histórico Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+        
+        body { background: #010409; color: #e6edf3; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
+        .tech-font { font-family: 'Orbitron', sans-serif; }
+
+        .facade-container {
+            position: relative;
+            box-shadow: 0 0 60px rgba(0,0,0,0.5);
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .facade-img { max-height: 70vh; display: block; filter: brightness(0.7); transition: 0.5s; }
+        .facade-img.active { filter: brightness(0.3) blur(4px); }
+
+        /* Hotspots */
+        .hotspot {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: rgba(34, 211, 238, 0.4);
+            border: 2px solid #22d3ee;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            z-index: 10;
+        }
+        .hotspot:hover { transform: scale(1.4); background: #22d3ee; box-shadow: 0 0 20px #22d3ee; }
+
+        .glass-sidebar {
+            background: rgba(13, 17, 23, 0.98);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid #30363d;
+            transform: translateX(100%);
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-open { transform: translateX(0); }
+
+        .consolidated-panel {
+            background: rgba(13, 17, 23, 0.6);
+            border-right: 1px solid #30363d;
+            scrollbar-width: thin;
+            scrollbar-color: #30363d transparent;
+        }
+
+        textarea { background: #161b22; border: 1px solid #30363d; color: #f0f6fc; resize: none; }
+        textarea:focus { border-color: #22d3ee; outline: none; }
+
+        .zone-summary {
+            border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body class="flex flex-col">
+
+    <nav class="p-4 flex justify-between items-center border-b border-slate-800 bg-black/20">
+        <div class="flex items-center gap-4">
+            <div class="h-8 w-1 bg-cyan-500"></div>
+            <div>
+                <h1 class="text-lg font-bold tech-font tracking-widest text-white leading-none">ATOCHA 1892 <span class="text-cyan-500 underline decoration-1">AUDIT</span></h1>
+                <p class="text-[9px] text-slate-500 uppercase tracking-widest mt-1">Inspección de Obra - VibeCoding Demo</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-8">
+            <div class="bg-black/40 px-6 py-1 rounded-full border border-cyan-900/50">
+                <span class="text-[10px] text-slate-500 uppercase mr-3">Avance Global:</span>
+                <span id="global-perc" class="text-2xl font-bold tech-font text-cyan-400">0%</span>
+            </div>
+            <img src="https://www.ineco.com/ineco/sites/default/files/2022-12/Logo%20Ineco.png" alt="Ineco" class="h-8 brightness-0 invert opacity-90">
+        </div>
+    </nav>
+
+    <main class="flex flex-1 relative overflow-hidden">
+        
+        <aside class="w-80 consolidated-panel p-6 overflow-y-auto hidden md:block">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <i class="fas fa-clipboard-list text-cyan-500"></i> Resumen del PM
+            </h3>
+            <div id="consolidation-list" class="space-y-4">
+                <p class="text-xs text-slate-600 italic">No hay registros de inspección todavía.</p>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex items-center justify-center p-6 relative bg-slate-950">
+            <div class="facade-container">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Fachada_de_1892_de_la_Estaci%C3%B3n_de_Atocha%2C_de_Madrid%2C_Espa%C3%B1a.JPG" id="facade" class="facade-img">
+                
+                <div class="hotspot" style="top: 15%; left: 50%;" title="Frontón" onclick="openInspector('centro')"><i class="fas fa-search text-[10px]"></i></div>
+                <div class="hotspot" style="top: 45%; left: 18%;" title="Ala Izquierda" onclick="openInspector('izq')"><i class="fas fa-search text-[10px]"></i></div>
+                <div class="hotspot" style="top: 45%; left: 82%;" title="Ala Derecha" onclick="openInspector('der')"><i class="fas fa-search text-[10px]"></i></div>
+                <div class="hotspot" style="top: 82%; left: 50%;" title="Base" onclick="openInspector('base')"><i class="fas fa-search text-[10px]"></i></div>
+            </div>
+        </div>
+
+        <div id="sidebar" class="w-[400px] glass-sidebar fixed right-0 top-0 h-full p-8 z-50 flex flex-col shadow-2xl">
+            <button onclick="closeInspector()" class="text-slate-500 hover:text-white mb-8 text-sm flex items-center gap-2">
+                <i class="fas fa-chevron-right"></i> CERRAR INSPECTOR
+            </button>
+            
+            <h2 id="side-title" class="text-xl font-bold tech-font text-cyan-400 mb-2 uppercase">Zona</h2>
+            <p id="side-desc" class="text-[11px] text-slate-500 mb-8 font-light italic leading-relaxed"></p>
+
+            <div class="space-y-8">
+                <div>
+                    <label class="block text-[10px] uppercase text-slate-400 mb-4 tracking-widest font-bold">Porcentaje de Avance</label>
+                    <input type="range" id="side-slider" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer" oninput="updateZoneProgress(this.value)">
+                    <div class="flex justify-between mt-3">
+                        <span class="text-[10px] text-slate-600">CERTIFICADO:</span>
+                        <span id="side-perc" class="text-2xl font-bold tech-font text-white">0%</span>
+                    </div>
+                </div>
+
+                <div class="flex-1">
+                    <label class="block text-[10px] uppercase text-slate-400 mb-4 tracking-widest font-bold">Observaciones Técnicas</label>
+                    <textarea id="side-notes" class="w-full h-64 p-4 rounded-xl text-sm leading-relaxed" placeholder="Escriba aquí los detalles de la inspección..."></textarea>
+                </div>
+            </div>
+
+            <div class="mt-auto">
+                <button onclick="saveAndClose()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-black py-4 rounded-xl transition-all shadow-lg text-sm tracking-widest">
+                    GUARDAR Y ACTUALIZAR
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const projectData = {
+            centro: { title: "Frontón Reloj", desc: "Grupo escultórico superior y esfera del reloj de Palacio.", progress: 0, notes: "" },
+            izq: { title: "Pabellón Este", desc: "Ladrillo visto y ventanales laterales zona Prado.", progress: 0, notes: "" },
+            der: { title: "Pabellón Oeste", desc: "Fachada lateral y accesos zona Méndez Álvaro.", progress: 0, notes: "" },
+            base: { title: "Suelo y Arquería", desc: "Zócalo de granito y arcos de entrada principales.", progress: 0, notes: "" }
+        };
+
+        let currentZone = '';
+
+        function openInspector(zone) {
+            currentZone = zone;
+            const data = projectData[zone];
+            document.getElementById('side-title').innerText = data.title;
+            document.getElementById('side-desc').innerText = data.desc;
+            document.getElementById('side-slider').value = data.progress;
+            document.getElementById('side-perc').innerText = data.progress + '%';
+            document.getElementById('side-notes').value = data.notes;
+            document.getElementById('sidebar').classList.add('sidebar-open');
+            document.getElementById('facade').classList.add('active');
+        }
+
+        function closeInspector() {
+            document.getElementById('sidebar').classList.remove('sidebar-open');
+            document.getElementById('facade').classList.remove('active');
+        }
+
+        function updateZoneProgress(val) {
+            document.getElementById('side-perc').innerText = val + '%';
+        }
+
+        function saveAndClose() {
+            if(currentZone) {
+                projectData[currentZone].progress = parseInt(document.getElementById('side-slider').value);
+                projectData[currentZone].notes = document.getElementById('side-notes').value;
+            }
+            updateGlobal();
+            renderConsolidation();
+            closeInspector();
+        }
+
+        function updateGlobal() {
+            const values = Object.values(projectData).map(z => z.progress);
+            const avg = Math.round(values.reduce((a,b) => a + b, 0) / values.length);
+            document.getElementById('global-perc').innerText = avg + '%';
+        }
+
+        function renderConsolidation() {
+            const list = document.getElementById('consolidation-list');
+            list.innerHTML = '';
+            
+            Object.keys(projectData).forEach(key => {
+                const z = projectData[key];
+                if(z.progress > 0 || z.notes.length > 0) {
+                    const div = document.createElement('div');
+                    div.className = 'zone-summary';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[10px] font-bold text-cyan-500 uppercase">${z.title}</span>
+                            <span class="text-xs tech-font text-white">${z.progress}%</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 font-light leading-snug">
+                            ${z.notes || '<span class="italic opacity-30">Sin comentarios registrados</span>'}
+                        </p>
+                    `;
+                    list.appendChild(div);
+                }
+            });
+
+            if(list.innerHTML === '') {
+                list.innerHTML = '<p class="text-xs text-slate-600 italic">No hay registros de inspección todavía.</p>';
+            }
+        }
+    </script>
+</body>
+</html>

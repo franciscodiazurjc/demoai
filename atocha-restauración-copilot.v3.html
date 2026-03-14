@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>ProjectPulse – Fachada Atocha</title>
+
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        display: flex;
+        height: 100vh;
+        background: #f3f4f6;
+    }
+
+    /* Panel lateral */
+    #sidebar {
+        width: 320px;
+        background: white;
+        padding: 20px;
+        box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+        overflow-y: auto;
+    }
+
+    #sidebar h2 { margin-top: 20px; }
+
+    /* Imagen principal */
+    #main {
+        position: relative;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    #fachada {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Logo Ineco */
+    #logo-ineco {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        width: 140px;
+        background: rgba(255,255,255,0.85);
+        padding: 6px 10px;
+        border-radius: 8px;
+        z-index: 10;
+    }
+
+    /* Zonas seleccionables */
+    .zona {
+        position: absolute;
+        border: 2px solid rgba(255,255,255,0.9);
+        border-radius: 6px;
+        background-color: rgba(0,0,0,0.15);
+        cursor: pointer;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .zona:hover {
+        background-color: rgba(0,0,0,0.25);
+        transform: scale(1.02);
+    }
+
+    .zona-label {
+        position: absolute;
+        background: rgba(0,0,0,0.65);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        pointer-events: none;
+    }
+
+    /* Panel emergente */
+    #panel-info {
+        position: absolute;
+        top: 50px;
+        right: 50px;
+        width: 300px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        padding: 20px;
+        display: none;
+        z-index: 20;
+    }
+
+    #panel-info h3 {
+        margin-top: 0;
+    }
+
+    textarea {
+        width: 100%;
+        height: 100px;
+        resize: none;
+        padding: 8px;
+        font-size: 14px;
+    }
+
+    .close-btn {
+        background: #dc2626;
+        color: white;
+        border: none;
+        padding: 6px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        float: right;
+    }
+</style>
+</head>
+
+<body>
+
+<!-- Panel lateral -->
+<div id="sidebar">
+    <h1>Proyecto: Fachada Atocha</h1>
+    <p>Haz clic en cualquier zona de la imagen para ver o editar su avance.</p>
+
+    <h2>Zonas</h2>
+    <ul>
+        <li>Cubierta metálica</li>
+        <li>Arco y vidrieras</li>
+        <li>Entrada principal</li>
+        <li>Alas laterales</li>
+        <li>Ornamentación superior</li>
+    </ul>
+</div>
+
+<!-- Zona principal -->
+<div id="main">
+    <div class="image-wrapper">
+
+        <!-- Logo Ineco -->
+        <img id="logo-ineco"
+             src="https://www.ineco.com/ineco/sites/default/files/2022-12/Logo%20Ineco.png"
+             alt="Logo Ineco">
+
+        <!-- Imagen de la fachada -->
+        <img id="fachada"
+             src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Fachada_de_1892_de_la_Estaci%C3%B3n_de_Atocha%2C_de_Madrid%2C_Espa%C3%B1a.JPG"
+             alt="Fachada Estación de Atocha">
+
+        <!-- Zonas clicables -->
+        <div class="zona" data-zona="Cubierta metálica"
+             style="top: 5%; left: 10%; width: 80%; height: 18%;"></div>
+        <div class="zona-label" style="top: 4%; left: 12%;">Cubierta metálica</div>
+
+        <div class="zona" data-zona="Arco y vidrieras"
+             style="top: 23%; left: 18%; width: 64%; height: 32%;"></div>
+        <div class="zona-label" style="top: 22%; left: 20%;">Arco y vidrieras</div>
+
+        <div class="zona" data-zona="Entrada principal"
+             style="top: 55%; left: 30%; width: 40%; height: 20%;"></div>
+        <div class="zona-label" style="top: 54%; left: 32%;">Entrada principal</div>
+
+        <div class="zona" data-zona="Alas laterales"
+             style="top: 35%; left: 3%; width: 94%; height: 40%;"></div>
+        <div class="zona-label" style="top: 34%; left: 6%;">Alas laterales</div>
+
+        <div class="zona" data-zona="Ornamentación superior"
+             style="top: 15%; left: 35%; width: 30%; height: 15%;"></div>
+        <div class="zona-label" style="top: 14%; left: 37%;">Ornamentación superior</div>
+
+    </div>
+</div>
+
+<!-- Panel emergente -->
+<div id="panel-info">
+    <button class="close-btn" onclick="cerrarPanel()">Cerrar</button>

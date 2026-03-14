@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>ProjectPulse – Atocha</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        display: flex;
+        background: #f4f4f4;
+    }
+
+    /* Panel lateral */
+    #sidebar {
+        width: 300px;
+        background: white;
+        padding: 20px;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+
+    #sidebar h2 {
+        margin-top: 0;
+    }
+
+    .status {
+        font-size: 18px;
+        font-weight: bold;
+        padding: 10px;
+        border-radius: 8px;
+        color: white;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .green { background: #4CAF50; }
+    .amber { background: #FFC107; }
+    .red { background: #F44336; }
+
+    /* Imagen + overlay */
+    #main {
+        position: relative;
+        flex-grow: 1;
+        overflow: hidden;
+    }
+
+    #fachada {
+        width: 100%;
+        display: block;
+    }
+
+    .zona {
+        position: absolute;
+        border: 3px solid rgba(255,255,255,0.8);
+        border-radius: 6px;
+        pointer-events: none;
+        transition: background 0.5s ease;
+    }
+
+    .zona-label {
+        position: absolute;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        padding: 4px 8px;
+        font-size: 12px;
+        border-radius: 4px;
+        pointer-events: none;
+    }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>Estado del Proyecto</h2>
+    <div id="estadoGeneral" class="status amber">En progreso</div>
+
+    <h3>Riesgos</h3>
+    <ul id="riesgos">
+        <li>Retrasos por permisos de patrimonio</li>
+        <li>Acceso limitado a zonas elevadas</li>
+    </ul>
+
+    <h3>Próximos hitos</h3>
+    <ul id="hitos">
+        <li>Inspección estructural – 20 abril</li>
+        <li>Restauración ventanales – 5 mayo</li>
+    </ul>
+</div>
+
+<div id="main">
+    <img id="fachada" src="IMAGE_URL_HERE" alt="Fachada de Atocha">
+
+    <!-- Zonas superpuestas -->
+    <div id="zona1" class="zona" style="top: 20%; left: 15%; width: 20%; height: 25%; background: rgba(255,165,0,0.4);"></div>
+    <div class="zona-label" style="top: 18%; left: 15%;">Cubierta</div>
+
+    <div id="zona2" class="zona" style="top: 50%; left: 30%; width: 25%; height: 30%; background: rgba(76,175,80,0.4);"></div>
+    <div class="zona-label" style="top: 48%; left: 30%;">Ventanales</div>
+
+    <div id="zona3" class="zona" style="top: 40%; left: 65%; width: 20%; height: 35%; background: rgba(244,67,54,0.4);"></div>
+    <div class="zona-label" style="top: 38%; left: 65%;">Estructura metálica</div>
+</div>
+
+</body>
+</html>

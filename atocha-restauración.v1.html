@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ineco | Restauración Fachada Histórica Atocha</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+        
+        body {
+            background: #050a15;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        .tech-font { font-family: 'Orbitron', sans-serif; }
+
+        /* Contenedor de la Imagen con Overlays */
+        .facade-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid rgba(34, 211, 238, 0.3);
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        .facade-img {
+            width: 100%;
+            display: block;
+            filter: grayscale(0.5) brightness(0.7);
+        }
+
+        /* Capas de progreso sobre la fachada */
+        .overlay-zone {
+            position: absolute;
+            transition: all 0.5s ease;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        /* Definición de zonas (Ajustadas a la fachada de Atocha) */
+        #zone-reloj { top: 10%; left: 40%; width: 20%; height: 25%; }
+        #zone-ala-izq { top: 30%; left: 5%; width: 35%; height: 50%; }
+        #zone-ala-der { top: 30%; left: 60%; width: 35%; height: 50%; }
+        #zone-marquesina { top: 65%; left: 30%; width: 40%; height: 30%; }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        input[type=range] {
+            accent-color: #22d3ee;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col p-6">
+
+    <header class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-black tech-font text-cyan-400 tracking-tighter uppercase">Protección Patrimonio Histórico</h1>
+            <p class="text-slate-500 text-sm">Proyecto: Restauración Envolvente Atocha | Ineco AI Division</p>
+        </div>
+        <div class="text-right">
+            <div class="text-[10px] text-slate-500 uppercase tracking-widest">Avance Integral</div>
+            <div id="total-perc" class="text-4xl font-bold tech-font text-white">0%</div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 gap-6 overflow-hidden">
+        
+        <div class="w-1/3 flex flex-col gap-4 overflow-y-auto pr-2">
+            <div class="glass-panel p-5 rounded-3xl">
+                <h3 class="text-xs font-bold text-cyan-500 uppercase mb-4 tracking-widest">Zonas de Intervención</h3>
+                
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Cuerpo Central y Reloj</span>
+                            <span class="font-bold text-cyan-400" id="val-reloj">0%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="0" oninput="sync('reloj', this.value)" class="w-full">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Ala Lateral Izquierda</span>
+                            <span class="font-bold text-cyan-400" id="val-izq">0%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="0" oninput="sync('izq', this.value)" class="w-full">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Ala Lateral Derecha</span>
+                            <span class="font-bold text-cyan-400" id="val-der">0%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="0" oninput="sync('der', this.value)" class="w-full">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Marquesina de Acceso</span>
+                            <span class="font-bold text-cyan-400" id="val-marq">0%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="0" oninput="sync('marq', this.value)" class="w-full">
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel p-5 rounded-3xl flex-1 border-l-4 border-cyan-500">
+                <h3 class="text-xs font-bold text-slate-400 uppercase mb-2 italic">Insights del Vibe-Engine</h3>
+                <p id="ai-log" class="text-xs text-slate-400 leading-relaxed">Esperando entrada de datos del PM...</p>
+            </div>
+        </div>
+
+        <div class="flex-1 flex items-center justify-center">
+            <div class="facade-container">
+                <img src="http://googleusercontent.com/image_collection/image_retrieval/8407920996960967159" alt="Fachada Atocha" class="facade-img">
+                
+                <div id="zone-reloj" class="overlay-zone bg-cyan-500" style="opacity: 0;"></div>
+                <div id="zone-ala-izq" class="overlay-zone bg-cyan-500" style="opacity: 0;"></div>
+                <div id="zone-ala-der" class="overlay-zone bg-cyan-500" style="opacity: 0;"></div>
+                <div id="zone-marquesina" class="overlay-zone bg-cyan-500" style="opacity: 0;"></div>
+                
+                <div class="absolute inset-0 pointer-events-none border border-cyan-500/10 grid grid-cols-12 grid-rows-12 opacity-30">
+                    <div class="border-[0.5px] border-cyan-500/20" v-for="n in 144"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const logs = {
+            reloj: "IA detecta fisura en el dial del reloj. Priorizando limpieza láser.",
+            izq: "Limpieza de ladrillo histórico en ala izquierda al ritmo previsto.",
+            der: "Refuerzo de cornisas en ala derecha completado según normativa de patrimonio.",
+            marq: "Desmontaje de elementos no originales en marquesina iniciado."
+        };
+
+        function sync(zone, val) {
+            // Actualizar Texto
+            const idMap = { 'reloj': 'val-reloj', 'izq': 'val-izq', 'der': 'val-der', 'marq': 'val-marq' };
+            document.getElementById(idMap[zone]).innerText = val + '%';
+
+            // Actualizar Overlay Visual
+            const overlayMap = { 'reloj': 'zone-reloj', 'izq': 'zone-ala-izq', 'der': 'zone-ala-der', 'marq': 'zone-marquesina' };
+            document.getElementById(overlayMap[zone]).style.opacity = (val / 100) * 0.8;

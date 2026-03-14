@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ineco | EDT Dinámica Atocha 360</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+        
+        body {
+            background: #020617;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(34, 211, 238, 0.1) 0%, transparent 30%),
+                radial-gradient(circle at 90% 80%, rgba(129, 140, 248, 0.1) 0%, transparent 30%);
+            min-height: 100vh;
+        }
+
+        .edt-card {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .edt-card:focus-within {
+            border-color: #22d3ee;
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+        }
+
+        .tech-font { font-family: 'Orbitron', sans-serif; }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #1e293b;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #22d3ee;
+            box-shadow: 0 0 10px #22d3ee;
+            cursor: pointer;
+        }
+
+        .progress-value {
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="p-6">
+
+    <header class="max-w-7xl mx-auto mb-10 flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900/50 p-6 rounded-3xl border border-white/5">
+        <div>
+            <div class="flex items-center gap-3 mb-1">
+                <div class="h-2 w-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                <span class="text-cyan-400 font-bold tech-font text-xs tracking-widest">SISTEMA DE GESTIÓN VIBE</span>
+            </div>
+            <h1 class="text-3xl font-black tech-font tracking-tight uppercase">Atocha Pasante <span class="text-slate-500 text-xl">| EDT 1.0</span></h1>
+        </div>
+        
+        <div class="mt-4 md:mt-0 bg-black/40 px-8 py-3 rounded-2xl border border-cyan-500/30 text-center min-w-[200px]">
+            <div class="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Avance Consolidado</div>
+            <div id="global-progress" class="text-4xl font-bold tech-font text-cyan-400">0%</div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-32">
+        
+        <div class="space-y-4">
+            <h3 class="text-slate-500 font-bold text-[10px] tracking-[0.2em] uppercase px-2">100 INFRAESTRUCTURA</h3>
+            <div class="edt-card p-5 rounded-2xl" data-category="infra">
+                <div class="flex justify-between text-xs mb-3 text-slate-400">
+                    <span>ID: 1.1</span>
+                    <span class="uppercase">Muros Pantalla</span>
+                </div>
+                <h4 class="text-sm font-medium mb-4 h-10">Excavación y Cerramiento Sur</h4>
+                <input type="range" min="0" max="100" value="45" class="task-slider">
+                <div class="flex justify-between mt-3">
+                    <span class="text-[10px] text-slate-500 uppercase">Estado</span>
+                    <span class="progress-value text-cyan-400">45%</span>
+                </div>
+            </div>
+            
+            <div class="edt-card p-5 rounded-2xl">
+                <div class="flex justify-between text-xs mb-3 text-slate-400">
+                    <span>ID: 1.2</span>
+                    <span class="uppercase">Túneles</span>
+                </div>
+                <h4 class="text-sm font-medium mb-4 h-10">Refuerzo Estructural Recoletos</h4>
+                <input type="range" min="0" max="100" value="20" class="task-slider">
+                <div class="flex justify-between mt-3">
+                    <span class="text-[10px] text-slate-500 uppercase">Estado</span>
+                    <span class="progress-value text-red-400">20%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <h3 class="text-slate-500 font-bold text-[10px] tracking-[0.2em] uppercase px-2">200 SUPERESTRUCTURA</h3>
+            <div class="edt-card p-5 rounded-2xl">
+                <div class="flex justify-between text-xs mb-3 text-slate-400">
+                    <span>ID: 2.1</span>
+                    <span class="uppercase">Vía</span>
+                </div>
+                <h4 class="text-sm font-medium mb-4 h-10">Montaje de Vía en Placa (Vía 1 y 2)</h4>
+                <input type="range" min="0" max="100" value="10" class="task-slider">
+                <div class="flex justify-between mt-3">
+                    <span class="text-[10px] text-slate-500 uppercase">Estado</span>
+                    <span class="progress-value text-slate-400">10%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <h3 class="text-slate-500 font-bold text-[10px] tracking-[0.2em] uppercase px-2">300 SISTEMAS</h3>
+            <div class="edt-card p-5 rounded-2xl border-l-2 border-orange-500/50">
+                <div class="flex justify-between text-xs mb-3 text-slate-400">
+                    <span>ID: 3.1</span>
+                    <span class="text-orange-400">CRÍTICO</span>
+                </div>
+                <h4 class="text-sm font-medium mb-4 h-10">Despliegue ERTMS y Enclavamientos</h4>
+                <input type="range" min="0" max="100" value="65" class="task-slider">
+                <div class="flex justify-between mt-3">
+                    <span class="text-[10px] text-slate-500 uppercase">Estado</span>
+                    <span class="progress-value text-orange-400">65%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <h3 class="text-slate-500 font-bold text-[10px] tracking-[0.2em] uppercase px-2">400 GESTIÓN</h3>
+            <div class="edt-card p-5 rounded-2xl">
+                <div class="flex justify-between text-xs mb-3 text-slate-400">
+                    <span>ID: 4.1</span>
+                    <span class="uppercase">Certificación</span>
+                </div>
+                <h4 class="text-sm font-medium mb-4 h-10">Expediente de Seguridad AESF</h4>
+                <input type="range" min="0" max="100" value="80" class="task-slider">
+                <div class="flex justify-between mt-3">
+                    <span class="text-[10px] text-slate-500 uppercase">Estado</span>
+                    <span class="progress-value text-green-400">80%</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-lg px-4">
+        <div class="bg-slate-900/90 border border-white/10 backdrop-blur-2xl p-4 rounded-3xl shadow-2xl flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-cyan-500/20 p-2 rounded-xl">
+                    <i class="fas fa-bolt text-cyan-400 animate-pulse"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Vibe-Mode</p>
+                    <p class="text-xs text-slate-300">Sincronización de EDT activa</p>
+                </div>
+            </div>
+            <button onclick="window.location.reload()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2 rounded-xl text-xs font-semibold transition-all">
+                Reiniciar
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const sliders = document.querySelectorAll('.task-slider');
+        const globalProgressEl = document.getElementById('global-progress');
+
+        function updateCalculations() {
+            let total = 0;
+            
+            sliders.forEach(slider => {
+                const val = parseInt(slider.value);
+                total += val;
+                
+                // Actualizar el texto al lado del slider
+                const label = slider.nextElementSibling.querySelector('.progress-value');
+                label.innerText = val + '%';
+
+                // Cambiar color dinámico del texto de la tarea
+                if(val < 30) label.className = 'progress-value text-red-500';
+                else if(val < 75) label.className = 'progress-value text-orange-400';
+                else label.className = 'progress-value text-cyan-400';
+            });
+
+            // Media aritmética simple (puedes ponderar si quieres)
+            const average = Math.round(total / sliders.length);
+            globalProgressEl.innerText = average + '%';
+            
+            // Efecto de brillo al actualizar el total
+            globalProgressEl.classList.remove('text-cyan-400');
+            globalProgressEl.classList.add('text-white');
+            setTimeout(() => {
+                globalProgressEl.classList.remove('text-white');
+                globalProgressEl.classList.add('text-cyan-400');
+            }, 100);
+        }
+
+        // Event Listeners
+        sliders.forEach(slider => {
+            slider.addEventListener('input', updateCalculations);
+        });
+
+        // Inicializar al cargar
+        updateCalculations();
+    </script>
+</body>
+</html>

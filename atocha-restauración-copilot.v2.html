@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>ProjectPulse – Fachada Atocha</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        display: flex;
+        height: 100vh;
+        background: #f3f4f6;
+        color: #111827;
+    }
+
+    /* Panel lateral */
+    #sidebar {
+        width: 320px;
+        background: #ffffff;
+        padding: 20px;
+        box-shadow: 2px 0 12px rgba(0,0,0,0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        z-index: 2;
+    }
+
+    #sidebar h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+    }
+
+    #sidebar h2 {
+        font-size: 16px;
+        margin: 12px 0 4px;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #ffffff;
+    }
+
+    .status-green { background: #16a34a; }
+    .status-amber { background: #f59e0b; }
+    .status-red   { background: #dc2626; }
+
+    .zona-control {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+        font-size: 13px;
+    }
+
+    select {
+        font-size: 13px;
+        padding: 2px 4px;
+    }
+
+    ul {
+        padding-left: 18px;
+        margin: 4px 0;
+        font-size: 13px;
+    }
+
+    /* Zona principal con imagen */
+    #main {
+        position: relative;
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+    }
+
+    .image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#fachada {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* O "contain" si prefieres ver toda la imagen */
+}
+
+    /* Overlays de zonas (porcentaje relativo al contenedor) */
+    .zona {
+        position: absolute;
+        border-radius: 6px;
+        border: 2px solid rgba(255,255,255,0.9);
+        background-color: rgba(148,163,184,0.0);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        pointer-events: none;
+    }
+
+    .zona-label {
+        position: absolute;
+        padding: 3px 8px;
+        font-size: 11px;
+        border-radius: 999px;
+        background: rgba(15,23,42,0.75);
+        color: #f9fafb;
+        pointer-events: none;
+        white-space: nowrap;
+    }
+
+    .zona-active {
+        box-shadow: 0 0 0 2px rgba(15,23,42,0.4);
+    }
+
+    .zona-green { background-color: rgba(34,197,94,0.35); }
+    .zona-amber { background-color: rgba(245,158,11,0.35); }
+    .zona-red   { background-color: rgba(239,68,68,0.35); }
+
+    /* Pequeño badge arriba a la derecha */
+    .badge {
+        position: absolute;
+        top: 12px;
+        right: 16px;
+        background: rgba(15,23,42,0.85);
+        color: #e5e7eb;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+    <div>
+        <h1>Proyecto: Fachada Atocha</h1>
+        <div class="status-pill status-amber" id="estadoGeneral">
+            <span>Estado general:</span><span id="estadoGeneralTexto">En progreso</span>
+        </div>
+        <p style="font-size:13px;margin:6px 0 0;">
+            Restauración y revisión de la fachada histórica protegida de la Estación de Atocha.
+        </p>
+    </div>
+
+    <div>
+        <h2>Zonas de intervención</h2>
+
+        <div class="zona-control">
+            <span>Cubierta metálica</span>
+            <select data-zona="zona1" class="selector-estado">
+                <option value="green">Verde</option>
+                <option value="amber" selected>Ámbar</option>
+                <option value="red">Rojo</option>
+            </select>
+        </div>
+
+        <div class="zona-control">
+            <span>Arco y vidrieras</span>
+            <select data-zona="zona2" class="selector-estado">
+                <option value="green" selected>Verde</option>
+                <option value="amber">Ámbar</option>
+                <option value="red">Rojo</option>
+            </select>
+        </div>
+
+        <div class="zona-control">
+            <span>Entrada principal</span>
+            <select data-zona="zona3" class="selector-estado">
+                <option value="green">Verde</option>
+                <option value="amber" selected>Ámbar</option>
+                <option value="red">Rojo</option>
+            </select>
+        </div>
+
+        <div class="zona-control">
+            <span>Alas laterales</span>
+            <select data-zona="zona4" class="selector-estado">
+                <option value="green">Verde</option>
+                <option value="amber">Ámbar</option>
+                <option value="red" selected>Rojo</option>
+            </select>
+        </div>
+
+        <div class="zona-control">
+            <span>Ornamentación superior</span>
+            <select data-zona="zona5" class="selector-estado">
+                <option value="green">Verde</option>
+                <option value="amber" selected>Ámbar</option>
+                <option value="red">Rojo</option>
+            </select>
+        </div>
+    </div>
+
+    <div>
+        <h2>Riesgos clave</h2>
+        <ul id="listaRiesgos">
+            <li>Permisos de patrimonio y supervisión externa.</li>
+            <li>Trabajos en altura en cubierta metálica.</li>
+            <li>Interferencia con operación diaria de la estación.</li>
+        </ul>
+    </div>
+
+    <div>
+        <h2>Próximos hitos</h2>
+        <ul>
+            <li>Informe técnico de estructura – 20 abril</li>
+            <li>Inicio restauración vidrieras – 5 mayo</li>
+            <li>Revisión final de patrimonio – 30 junio</li>
+        </ul>
+    </div>
+</div>
+
+<div id="main">
+    <div class="image-wrapper">
+        <!-- Usa aquí tu imagen local o una URL -->
+        <img id="fachada" 
+     src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Fachada_de_1892_de_la_Estaci%C3%B3n_de_Atocha%2C_de_Madrid%2C_Espa%C3%B1a.JPG"
+     alt="Fachada Estación de Atocha">
+     
+
+        <!-- Badge superior -->
+        <div class="badge">
+            <span>ProjectPulse · Atocha</span>
+        </div>
+
+        <!-- ZONA 1: Cubierta metálica superior -->
+        <div id="zona1" class="zona zona-amber zona-active"
+             style="top: 5%; left: 10%; width: 80%; height: 18%;"></div>
+        <div class="zona-label" style="top: 4%; left: 12%;">Cubierta metálica</div>
+
+        <!-- ZONA 2: Arco central y vidrieras -->
+        <div id="zona2" class="zona zona-green zona-active"
+             style="top: 23%; left: 18%; width: 64%; height: 32%;"></div>
+        <div class="zona-label" style="top: 22%; left: 20%;">Arco y vidrieras</div>
+
+        <!-- ZONA 3: Entrada principal -->
+        <div id="zona3" class="zona zona-amber zona-active"
+             style="top: 55%; left: 30%; width: 40%; height: 20%;"></div>
+        <div class="zona-label" style="top: 54%; left: 32%;">Entrada principal</div>
+
+        <!-- ZONA 4: Alas laterales -->
+        <div id="zona4" class="zona zona-red zona-active"
+             style="top: 35%; left: 3%; width: 94%; height: 40%;"></div>
+        <div class="zona-label" style="top: 34%; left: 6%;">Alas laterales</div>
+
+        <!-- ZONA 5: Ornamentación superior -->
+        <div id="zona5" class="zona zona-amber zona-active"
+             style="top: 15%; left: 35%; width: 30%; height: 15%;"></div>
+        <div class="zona-label" style="top: 14%; left: 37%;">Ornamentación superior</div>
+    </div>
+</div>
+
+<script>
+    const selectors = document.querySelectorAll('.selector-estado');
+    const estadoGeneral = document.getElementById('estadoGeneral');
+    const estadoGeneralTexto = document.getElementById('estadoGeneralTexto');
+
+    function actualizarZona(zonaId, estado) {
+        const zona = document.getElementById(zonaId);
+        if (!zona) return;
+        zona.classList.remove('zona-green', 'zona-amber', 'zona-red');
+        zona.classList.add('zona-' + estado);
+    }
+
+    function calcularEstadoGeneral() {
+        const valores = Array.from(selectors).map(s => s.value);
+        if (valores.includes('red')) {
+            estadoGeneral.className = 'status-pill status-red';
+            estadoGeneralTexto.textContent = 'En riesgo';
+        } else if (valores.includes('amber')) {
+            estadoGeneral.className = 'status-pill status-amber';
+            estadoGeneralTexto.textContent = 'En progreso';
+        } else {
+            estadoGeneral.className = 'status-pill status-green';
+            estadoGeneralTexto.textContent = 'Completado';
+        }
+    }
+
+    selectors.forEach(sel => {
+        sel.addEventListener('change', () => {
+            const zonaId = sel.getAttribute('data-zona');
+            actualizarZona(zonaId, sel.value);
+            calcularEstadoGeneral();
+        });
+    });
+
+    // Inicial
+    calcularEstadoGeneral();
+</script>
+
+</body>
+</html>
