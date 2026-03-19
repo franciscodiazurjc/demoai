@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laberinto 3D — Multijugador</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #04040f;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: #7ec8e3;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 300;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: #00e5ff;
+    text-shadow: 0 0 25px #00e5ff, 0 0 60px rgba(0,229,255,0.25);
+    margin-bottom: 6px;
+  }
+
+  #hint {
+    font-size: 0.68rem;
+    opacity: 0.4;
+    letter-spacing: 0.15em;
+    margin-bottom: 12px;
+  }
+
+  #hud {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    min-height: 22px;
+  }
+
+  .pip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pip-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  #canvas-wrap {
+    position: relative;
+  }
+
+  canvas {
+    display: block;
+    border: 1px solid rgba(0,229,255,0.12);
+    box-shadow: 0 0 60px rgba(0,229,255,0.05);
+  }
+
+  #toast {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,229,255,0.12);
+    border: 1px solid rgba(0,229,255,0.55);
+    color: #00e5ff;
+    padding: 8px 22px;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    letter-spacing: 0.18em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+    text-shadow: 0 0 12px #00e5ff;
+  }
+  #toast.show { opacity: 1; }
+
+  #controls-hint {
+    margin-top: 10px;
+    font-size: 0.62rem;
+    opacity: 0.28;
+    letter-spacing: 0.22em;
+  }
+</style>
+</head>
+<body>
+
+<h1>Laberinto 3D</h1>
+<div id="hint">Abre en varias pestañas para jugar con otros jugadores</div>
+<div id="hud"></div>
+<div id="canvas-wrap">
+  <canvas id="c"></canvas>
+  <div id="toast">¡JUGADORES ENCONTRADOS!</div>
+</div>
+<div id="controls-hint">↑ ↓ ← → &nbsp; MOVER</div>
+
+<script>
+// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+
+const COLS = 13, ROWS = 13;
+
+// Responsive cell size: fit inside the viewport
+const viewSize = Math.min(window.innerWidth - 40, window.innerHeight - 150);
+const CELL = Math.max(28, Math.min(48, Math.floor(viewSize / COLS)));
+
+const WALL_W = Math.max(3, Math.round(CELL * 0.09));  // wall face thickness
+const WALL_D = Math.max(4, Math.round(CELL * 0.14));  // 3D depth offset
+const PR     = Math.max(7,  Math.round(CELL * 0.22));  // player radius
+const MOVE_DELAY       = 140;  // ms between moves
+const HEARTBEAT_MS     = 1500; // how often to broadcast our position
+const STALE_TIMEOUT_MS = 6000; // remove players silent for this long
+
+const SEED = 7777; // fixed → same maze in every tab
+
+const PCOLORS = [
+  '#ff3b8a', '#00e5ff', '#aaff00', '#ff9500',
+  '#bf5fff', '#ff4500', '#00ff99', '#ffdc00'
+];
+
+// Direction indices: N=0 S=1 E=2 W=3
+const DIR = { N:0, S:1, E:2, W:3 };
+// Delta [dRow, dCol] per direction
+const DR = [[-1,0],[1,0],[0,1],[0,-1]];
+// Opposite direction
+const OPP = [1,0,3,2];
+
+// ─── MAZE GENERATION (deterministic LCG) ─────────────────────────────────────
+
+function makeMaze(seed) {
+  let s = seed >>> 0;
+  function rand(n) {
+    // LCG parameters from Numerical Recipes (Knuth): multiplier=1664525, increment=1013904223
+    s = ((Math.imul(s, 1664525) + 1013904223) | 0) >>> 0;
+    return s % n;
+  }
+
+  // walls[r][c][dir] = true → wall exists in that direction
+  const walls = Array.from({length: ROWS}, () =>
+    Array.from({length: COLS}, () => [true, true, true, true])
+  );
+  const vis = Array.from({length: ROWS}, () => new Uint8Array(COLS));
+  const stack = [[0, 0]];
+  vis[0][0] = 1;
+  let cnt = 1;
+
+  while (cnt < ROWS * COLS) {
+    const [r, c] = stack[stack.length - 1];
+    const avail = [0,1,2,3].filter(d => {
+      const nr = r + DR[d][0], nc = c + DR[d][1];
+      return nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && !vis[nr][nc];
+    });
+    if (!avail.length) { stack.pop(); continue; }
+    const d  = avail[rand(avail.length)];
+    const nr = r + DR[d][0], nc = c + DR[d][1];
+    walls[r][c][d]       = false;
+    walls[nr][nc][OPP[d]] = false;
+    vis[nr][nc] = 1;
+    stack.push([nr, nc]);
+    cnt++;
+  }
+  return walls;
+}
+
+const maze = makeMaze(SEED);
+
+// ─── LOCAL PLAYER ─────────────────────────────────────────────────────────────
+
+// Use crypto.randomUUID when available for collision-free IDs, fall back to Math.random
+const myId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+  ? crypto.randomUUID()
+  : Math.random().toString(36).slice(2, 11) + Math.random().toString(36).slice(2, 11);
+const myColor = PCOLORS[Math.floor(Math.random() * PCOLORS.length)];
+
+let myR  = Math.floor(Math.random() * ROWS);
+let myC  = Math.floor(Math.random() * COLS);
+let myPx = myC * CELL + CELL / 2;  // pixel position (animated)
+let myPy = myR * CELL + CELL / 2;
+
+// ─── MULTIPLAYER (BroadcastChannel) ───────────────────────────────────────────
+
+const ch     = new BroadcastChannel('maze3d-v2');
+const others = new Map(); // id → { r, c, px, py, color, ts }
+
+function send(type) {
+  ch.postMessage({ type, id: myId, color: myColor, r: myR, c: myC });
+}
+
+ch.onmessage = ({ data: d }) => {
+  if (!d || d.id === myId) return;
+
+  if (d.type === 'bye') {
+    others.delete(d.id);
+    updateHud();
+    return;
+  }
+
+  // hello / hello_reply / move
+  if (!others.has(d.id)) {
+    others.set(d.id, {
+      r: d.r, c: d.c,
+      px: d.c * CELL + CELL / 2,
+      py: d.r * CELL + CELL / 2,
+      color: d.color, ts: Date.now()
+    });
+    if (d.type === 'hello') send('hello_reply');
+  } else {
+    const p = others.get(d.id);
+    p.r = d.r; p.c = d.c; p.color = d.color; p.ts = Date.now();
+  }
+  checkMeeting();
+  updateHud();
+};
+
+send('hello');
+const heartbeatInterval = setInterval(() => send('move'), HEARTBEAT_MS);
+
+// Remove stale players
+setInterval(() => {
+  const now = Date.now();
+  let changed = false;
+  for (const [id, p] of others) {
+    if (now - p.ts > STALE_TIMEOUT_MS) { others.delete(id); changed = true; }
+  }
+  if (changed) updateHud();
+}, 3000);
+
+window.addEventListener('beforeunload', () => {
+  send('bye');
+  clearInterval(heartbeatInterval);
+  ch.close();
+});
+
+// ─── MOVEMENT ─────────────────────────────────────────────────────────────────
+
+const keys = new Set();
+let moveLocked = false;
+
+window.addEventListener('keydown', e => {
+  const arrows = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
+  if (arrows.includes(e.key)) {
+    e.preventDefault();
+    keys.add(e.key);
+    if (!moveLocked) step();
+  }
+});
+window.addEventListener('keyup', e => keys.delete(e.key));
+
+function step() {
+  if (moveLocked) return;
+  let dir = -1;
+  if      (keys.has('ArrowUp'))    dir = DIR.N;
+  else if (keys.has('ArrowDown'))  dir = DIR.S;
+  else if (keys.has('ArrowRight')) dir = DIR.E;
+  else if (keys.has('ArrowLeft'))  dir = DIR.W;
+  if (dir === -1) return;
+
+  if (maze[myR][myC][dir]) return; // wall blocks
+
+  myR += DR[dir][0];
+  myC += DR[dir][1];
+  send('move');
+  checkMeeting();
+
+  moveLocked = true;
+  setTimeout(() => {
+    moveLocked = false;
+    step(); // handle held key
+  }, MOVE_DELAY);
+}
+
+// ─── MEETING DETECTION ────────────────────────────────────────────────────────
+
+let toastTimer = null;
+function checkMeeting() {
+  for (const p of others.values()) {
+    if (p.r === myR && p.c === myC) { showToast(); return; }
+  }
+}
+
+function showToast() {
+  const el = document.getElementById('toast');
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ─── CANVAS ───────────────────────────────────────────────────────────────────
+
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const CW = COLS * CELL, CH = ROWS * CELL;
+canvas.width = CW; canvas.height = CH;
+
+// ─── RENDERING ────────────────────────────────────────────────────────────────
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function drawFloor() {
+  ctx.fillStyle = '#030310';
+  ctx.fillRect(0, 0, CW, CH);
+  // Subtle grid lines
+  ctx.strokeStyle = 'rgba(0,180,220,0.06)';
+  ctx.lineWidth = 0.5;
+  for (let r = 0; r <= ROWS; r++) {
+    ctx.beginPath(); ctx.moveTo(0, r * CELL); ctx.lineTo(CW, r * CELL); ctx.stroke();
+  }
+  for (let c = 0; c <= COLS; c++) {
+    ctx.beginPath(); ctx.moveTo(c * CELL, 0); ctx.lineTo(c * CELL, CH); ctx.stroke();
+  }
+}
+
+function drawWallSeg(x1, y1, x2, y2, horiz) {
+  const ox = horiz ? 0 : WALL_D;
+  const oy = horiz ? WALL_D : 0;
+  const hw = WALL_W / 2;
+
+  ctx.save();
+  ctx.lineCap = 'square';
+
+  // --- depth face (3D shadow) ---
+  ctx.strokeStyle = 'rgba(0,55,75,0.95)';
+  ctx.lineWidth = WALL_W + 2;
+  ctx.shadowBlur = 0;
+  ctx.beginPath(); ctx.moveTo(x1 + ox, y1 + oy); ctx.lineTo(x2 + ox, y2 + oy); ctx.stroke();
+
+  // --- connecting side lines (end caps of the 3D face) ---
+  ctx.strokeStyle = 'rgba(0,70,90,0.6)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1 + ox, y1 + oy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x2 + ox, y2 + oy); ctx.stroke();
+
+  // --- outer soft glow halo ---
+  ctx.strokeStyle = 'rgba(0,229,255,0.12)';
+  ctx.lineWidth = WALL_W + 10;
+  ctx.shadowBlur = 0;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+
+  // --- core wall line ---
+  ctx.strokeStyle = '#00b8d4';
+  ctx.lineWidth = WALL_W;
+  ctx.shadowColor = '#00e5ff';
+  ctx.shadowBlur = 14;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+
+  // --- bright highlight edge ---
+  ctx.strokeStyle = 'rgba(180,255,255,0.75)';
+  ctx.lineWidth = 1;
+  ctx.shadowColor = '#ffffff';
+  ctx.shadowBlur = 5;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawMaze() {
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const w = maze[r][c];
+      const x = c * CELL, y = r * CELL;
+
+      if (w[DIR.N]) drawWallSeg(x,        y,        x + CELL, y,        true);
+      if (w[DIR.W]) drawWallSeg(x,        y,        x,        y + CELL, false);
+      // South / East only on boundary rows/cols to avoid double draws
+      if (r === ROWS-1 && w[DIR.S]) drawWallSeg(x,        y + CELL, x + CELL, y + CELL, true);
+      if (c === COLS-1 && w[DIR.E]) drawWallSeg(x + CELL, y,        x + CELL, y + CELL, false);
+    }
+  }
+  // Corner pillars at every grid intersection (fill wall joints neatly)
+  drawCorners();
+}
+
+function drawCorners() {
+  const r = Math.ceil(WALL_W / 2);
+  ctx.save();
+  ctx.fillStyle = '#00b8d4';
+  ctx.shadowColor = '#00e5ff';
+  ctx.shadowBlur = 10;
+  for (let row = 0; row <= ROWS; row++) {
+    for (let col = 0; col <= COLS; col++) {
+      ctx.beginPath();
+      ctx.arc(col * CELL, row * CELL, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function drawPlayer(px, py, color, isMe) {
+  ctx.save();
+
+  // Soft outer glow
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 28;
+  ctx.globalAlpha = 0.35;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(px, py, PR + 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Main body
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(px, py, PR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Specular highlight
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.38)';
+  ctx.beginPath();
+  ctx.arc(px - PR * 0.28, py - PR * 0.28, PR * 0.38, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ring for local player
+  if (isMe) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(px, py, PR + 5, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function updatePositions() {
+  myPx = lerp(myPx, myC * CELL + CELL / 2, 0.22);
+  myPy = lerp(myPy, myR * CELL + CELL / 2, 0.22);
+  for (const p of others.values()) {
+    p.px = lerp(p.px, p.c * CELL + CELL / 2, 0.16);
+    p.py = lerp(p.py, p.r * CELL + CELL / 2, 0.16);
+  }
+}
+
+function render() {
+  updatePositions();
+  drawFloor();
+  drawMaze();
+  for (const p of others.values()) drawPlayer(p.px, p.py, p.color, false);
+  drawPlayer(myPx, myPy, myColor, true);
+  requestAnimationFrame(render);
+}
+
+render();
+
+// ─── HUD ─────────────────────────────────────────────────────────────────────
+
+function updateHud() {
+  const hud = document.getElementById('hud');
+  hud.innerHTML = '';
+  const pip = (color, label) => {
+    const d = document.createElement('div');
+    d.className = 'pip';
+    d.innerHTML = `<div class="pip-dot" style="background:${color};box-shadow:0 0 8px ${color}"></div><span>${label}</span>`;
+    return d;
+  };
+  hud.appendChild(pip(myColor, 'Tú'));
+  let i = 1;
+  for (const p of others.values()) hud.appendChild(pip(p.color, `J${i++}`));
+}
+
+updateHud();
+</script>
+
+</body>
+</html>
